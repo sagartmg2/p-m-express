@@ -1,0 +1,3 @@
+https://www.mongodb.com/docs/manual/administration/install-community/
+
+https://www.mongodb.com/docs/mongodb-shell/install/

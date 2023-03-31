@@ -1,6 +1,6 @@
 
 const express = require("express")
-const { fetchProducts } = require("../Controller/todo")
+const { fetchTodos } = require("../Controller/todo")
 
 const router = express.Router()
 

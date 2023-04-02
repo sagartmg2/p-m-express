@@ -1,8 +1,11 @@
 const express = require('express')
+const mongoose = require('mongoose');
 const createProduct = require("./products") //default import
 const { fetchProducts } = require("./products") // named import 
 
 
+mongoose.connect('mongodb://127.0.0.1:27017/todosDB')
+    .then(() => console.log('Connected!'));
 const app = express()
 
 app.use(express.json()) // global middleware -> runs each and every request

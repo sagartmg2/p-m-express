@@ -1,98 +1,49 @@
-const express = require('express')
-const mongoose = require('mongoose');
-const createProduct = require("./products") //default import
-const { fetchProducts } = require("./products") // named import 
+const express = require("express")
+require("./config/database")
 
 
-mongoose.connect('mongodb://127.0.0.1:27017/todosDB')
-    .then(() => console.log('Connected!'));
-const app = express()
+const app = express(); // return { .... }
+app.use(express.json()) // global middleware
 
-app.use(express.json()) // global middleware -> runs each and every request
+const auth_route = require("./route/auth")
 
-
-/* 
-        Status codes
-        2 - suc
-        3 - redirect
-        4   
-            400
-            401  // unauthautnticated  // user not logged in 
-            403
-            404
-        5
-
-*/
-
-/*
- middleware 
-
-    // function which has access to request and nesponse and also can mutate them  and also has access to next valid middleware
-    - global middelware
-     - route level middlewre
-     - third party widdleware
-
-
-*/
-
-let logged_in = true
-
-function checkAuthentication(req, res, next) {
-    console.log("check authenticateion ");
-    if (!logged_in) {
-        return res.status(401).send({ msg: "unauthencated" })
-    }
-    next()
-}
-
-function checkAccess(req, res, next) {
-    console.log("check access");
-    let access = true;
-    if (!access) {
-        res.status(403).send({ msg: "Forbidden " })
-    }
-    next()
-}
+app.use("/api", auth_route)
 
 
 
-
-// app.use(checkAuthentication) // global middleware -> run on every requests
-
-// checkAuthentication()
-
-
-
-
-app.get('/', function (req, res) {
-    console.log(req.user);
-    res.send('Hello World')
+app.use((req, res) => {
+    res.status(404).send({
+        msg: "Resrource not found"
+    })
 })
 
+app.use((err, req, res, next) => {
+    let status = 500;
+    let msg = "SERVER error"
+    let errors = null
 
-app.get('/todos', function (req, res) {
-    res.send([
-        { tite: "one", status: false },
-        { tite: "two", status: true },
-    ])
-})
+    if (err.name == "ValidationError") {
+        status = 400;
+        msg = "Bad Request"
 
+        let errors_arr = Object.entries(err.errors)
+        let temp = []
 
-app.get("/products", fetchProducts)
+        errors_arr.forEach(el => {
+            let obj = {}
+            obj.params = el[0];
+            obj.msg = el[1].message
+            temp.push(obj)
+        })
 
-app.post('/products', checkAuthentication, checkAccess, createProduct)
+        errors = temp
 
-app.post('/todos', checkAuthentication, function (req, res) {
-    // if (!logged_in) {
-    //     return res.status(401).send({ msg: "unauthencated" })
-    // }
+    }
 
-    console.log(req.body); // 
-    // insert in dabase 
-    res.send("data inserted")
+    res.status(status).send({ msg: msg, errors })
 
 })
 
 app.listen(8000, () => {
-    console.log("sever started");
+    console.log("server started ");
 })

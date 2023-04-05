@@ -23,13 +23,19 @@ const UserSchema = new Schema({
                 }
             },
             message: "email already exists"
-
         }
 
     },
     role: {
         type: String,
-        enum: [SELLER, BUYER]
+        enum: [SELLER, BUYER],
+        set: function (value) {
+            return value.toLowerCase()
+        }
+    },
+    password: {
+        type: String,
+        required: true
     }
 });
 

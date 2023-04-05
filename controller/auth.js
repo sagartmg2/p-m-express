@@ -1,30 +1,14 @@
 const Joi = require('joi');
 const User = require("../model/User");
+const bcrypt = require("bcrypt")
 
-const schema = Joi.object({
-    name: Joi.string()
-        .max(255)
-        .required(),
-    email: Joi.string()
-        .email()
-        .required()
-})
 
 const signup = async (req, res, next) => {
     console.log(req.body)
 
     try {
-        const value = await schema.validateAsync(req.body, { abortEarly: false });
-    }
-    catch (err) {
-        res.send(err)
-    }
-
-
-
-    try {
-
-        let user = await User.create(req.body)
+        let hashed_pw = await bcrypt.hash(req.body.password, 10);
+        let user = await User.create({ ...req.body, password: hashed_pw })
         res.send(user);
     } catch (err) {
         next(err)
@@ -32,11 +16,26 @@ const signup = async (req, res, next) => {
 
 }
 
-const login = (req, res) => {
-    // fetch data from requesst 
-    // validation 
-    // store in database 
-    res.send("user created");
+
+
+const login = async (req, res) => {
+
+    /* check if valid use email   */
+    /* check if valid password  */
+
+    let user = await User.findOne({ email: req.body.email })
+    console.log(user);
+
+    if (user) {
+        let status = await bcrypt.compare(req.body.password, user.password);
+        if (status) {
+            let obj = { ...user.toObject() }
+            delete obj.password
+            return res.send({ data: obj })
+        }
+    }
+
+    return res.status(401).send({ msg: "unauthencitaed." })
 
 }
 

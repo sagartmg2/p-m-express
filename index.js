@@ -1,9 +1,11 @@
 const express = require("express")
 require("./config/database")
-
+const fs = require("fs")
+let data = fs.readFileSync("./package.json")
+console.log(data)
 
 const app = express(); // return { .... }
-app.use(express.json()) // global middleware
+app.use(express.json()) // global middleware  // we will get value in req.body
 
 const auth_route = require("./route/auth")
 

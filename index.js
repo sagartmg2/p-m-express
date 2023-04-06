@@ -1,15 +1,16 @@
 const express = require("express")
 require("./config/database")
-const fs = require("fs")
-let data = fs.readFileSync("./package.json")
-console.log(data)
 
 const app = express(); // return { .... }
 app.use(express.json()) // global middleware  // we will get value in req.body
+require('dotenv').config()
+
 
 const auth_route = require("./route/auth")
+const product_route = require("./route/product")
 
 app.use("/api", auth_route)
+app.use("/api/products", product_route)
 
 
 
@@ -42,7 +43,7 @@ app.use((err, req, res, next) => {
 
     }
 
-    res.status(status).send({ msg: msg, errors })
+    res.status(status).send({ msg: msg, errors,error:err.message })
 
 })
 

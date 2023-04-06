@@ -34,12 +34,16 @@ const ProductSchema = new Schema({
             price:100,
             created_by:{
                 name:"ram",
-                email:"r@r.com"
+                email:"r@r.com",
+                location: "",
+                phone:"12312"
             }
         }
     */
     created_by: {
-        type : ObjectId  // just like SQL , the is reference to the id of users table/collection
+        type: ObjectId,  // just like SQL , the is reference to the id of users table/collection
+        required: true
+
     }
 
 });

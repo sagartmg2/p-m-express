@@ -1,6 +1,8 @@
+var jwt = require('jsonwebtoken');
 const Joi = require('joi');
 const User = require("../model/User");
 const bcrypt = require("bcrypt")
+
 
 
 const signup = async (req, res, next) => {
@@ -29,9 +31,11 @@ const login = async (req, res) => {
     if (user) {
         let status = await bcrypt.compare(req.body.password, user.password);
         if (status) {
+
             let obj = { ...user.toObject() }
             delete obj.password
-            return res.send({ data: obj })
+            var token = jwt.sign(obj, process.env.JWT_SECRET);
+            return res.send({ data: obj, token })
         }
     }
 

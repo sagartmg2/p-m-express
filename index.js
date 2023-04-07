@@ -1,9 +1,43 @@
 const express = require("express")
 require("./config/database")
+const fileUpload = require("express-fileupload")
 
 const app = express(); // return { .... }
 app.use(express.json()) // global middleware  // we will get value in req.body
 require('dotenv').config()
+
+app.use(express.static('uploads'))
+app.use(fileUpload()); // we can read data sent from form
+
+
+app.use((req, res, next) => {
+
+    function changeRequest(field) {
+
+
+        if (req[field]) {
+            let temp = {};
+            let temp_arr = Object.entries(req[field])
+
+            temp_arr.forEach(el => {
+                if (el[0].endsWith("[]")) {
+                    temp[el[0].slice(0, -2)] = Array.isArray(el[1]) ? el[1] : [el[1]]
+                } else {
+                    temp[el[0]] = el[1]
+                }
+            })
+            req[field] = temp
+        }
+
+
+    }
+
+    changeRequest("body")
+    changeRequest("files")
+
+    next()
+
+})
 
 
 const auth_route = require("./route/auth")
@@ -43,7 +77,7 @@ app.use((err, req, res, next) => {
 
     }
 
-    res.status(status).send({ msg: msg, errors,error:err.message })
+    res.status(status).send({ msg: msg, errors, error: err.message })
 
 })
 

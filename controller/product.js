@@ -3,7 +3,79 @@ const path = require("path")
 const fs = require("fs")
 
 const fetchProduct = async (req, res, next) => {
-    let products = await Product.find()
+    /* page 1 */
+    // let products = await Product.find().skip(0).limit(25)
+
+    /* page 2  */
+    // let products = await Product.find().skip(25).limit(25)
+
+    // console.log(req.query)
+    // return;
+
+    let per_page = req.query.per_page || 25
+    let page = req.query.page || 1
+    let search_term = req.query.search_term || ""
+
+
+    let price_from = parseFloat(req.query.price_from) || 0
+    let price_to = parseFloat(req.query.price_to) || 999999999999
+
+    // let products = await Product.find({ name: RegExp(search_term, "i") }).skip((page - 1) * per_page).limit(per_page)
+
+    /* query operator $or */
+
+    // let products = await Product.find(
+    //     {
+    //         $or: [
+    //             { name: RegExp(search_term, "i") },
+    //             { brands: RegExp(search_term, "i") },
+    //             { categories: RegExp(search_term, "i") }
+    //         ],
+    //         $and: [
+    //             { price: { $gte: 1000 } }
+    //         ]
+    //     }
+    // ).skip((page - 1) * per_page).limit(per_page)
+
+    /* sql / realtionship -> Join */
+    /* mongodb-> aggregation */
+
+    /*
+     Aggrgation   (advance find method)  // analogy of water filtrations
+     Aggrgation framework 
+     Aggrgation pipeline 
+
+     collection of different filters  
+     */
+
+    let products = await Product.aggregate([
+        // .find({name:"mouse"})
+        {
+            $match: {
+                $or: [
+                    { name: RegExp(search_term, "i") },
+                    { brands: RegExp(search_term, "i") },
+                    { categories: RegExp(search_term, "i") }
+                ]
+            }
+        }, // searched by name
+        {
+            $match: {
+                $and: [
+                    { price: { $gte: price_from } },
+                    { price: { $lte: price_to } },
+                ]
+            }
+        },
+    ])
+
+    /* totoal:38,page:1,per_page=25,products :[25datas..] */
+
+
+
+
+
+
     res.send({ data: products })
 }
 
@@ -99,19 +171,19 @@ const remove = async (req, res, next) => {
 
     let product = await Product.findById(req.params.id)
 
-    if(product){
+    if (product) {
 
         // console.log()
         // [ '1.png', '2.png' ]
-        product.images.forEach(img =>{
-            fs.unlinkSync(path.resolve("uploads",img))
+        product.images.forEach(img => {
+            fs.unlinkSync(path.resolve("uploads", img))
         })
         await Product.findByIdAndDelete(req.params.id)
         return res.status(204).end()
     }
 
     res.status(404).send("Resource not found")
-    
+
 
 
     // if (product) {

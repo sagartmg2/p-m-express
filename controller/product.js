@@ -53,7 +53,7 @@ const update = async (req, res, next) => {
     let images = [] // [3.png]
 
     old_images.forEach(img => {
-        if (sent_old_images.includes(img)) {
+        if (sent_old_images?.includes(img)) {
             images.push(img)
         } else {
             // delete 
@@ -95,10 +95,38 @@ const update = async (req, res, next) => {
 }
 
 
+const remove = async (req, res, next) => {
+
+    let product = await Product.findById(req.params.id)
+
+    if(product){
+
+        // console.log()
+        // [ '1.png', '2.png' ]
+        product.images.forEach(img =>{
+            fs.unlinkSync(path.resolve("uploads",img))
+        })
+        await Product.findByIdAndDelete(req.params.id)
+        return res.status(204).end()
+    }
+
+    res.status(404).send("Resource not found")
+    
+
+
+    // if (product) {
+    // }else{
+    //     res.send("somehting eror.")
+    // }
+}
+
+
+
 
 
 module.exports = {
     fetchProduct,
     store,
-    update
+    update,
+    remove
 }

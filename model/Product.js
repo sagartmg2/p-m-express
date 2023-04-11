@@ -42,7 +42,8 @@ const ProductSchema = new Schema({
     */
     created_by: {
         type: ObjectId,  // just like SQL , the is reference to the id of users table/collection
-        required: true
+        required: true,
+        ref : "User"
 
     }
 

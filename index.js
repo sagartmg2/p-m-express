@@ -42,9 +42,11 @@ app.use((req, res, next) => {
 
 const auth_route = require("./route/auth")
 const product_route = require("./route/product")
+const order_route = require("./route/order")
 
 app.use("/api", auth_route)
 app.use("/api/products", product_route)
+app.use("/api/orders", order_route)
 
 
 

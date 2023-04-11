@@ -39,7 +39,7 @@ const login = async (req, res) => {
         }
     }
 
-    return res.status(401).send({ msg: "unauthencitaed." })
+    return res.status(401).send({ msg: "Invalid Credentials." })
 
 }
 

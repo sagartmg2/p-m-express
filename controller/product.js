@@ -1,8 +1,12 @@
 const Product = require("../model/Product")
+const User = require("../model/User")
 const path = require("path")
 const fs = require("fs")
 
 const fetchProduct = async (req, res, next) => {
+
+
+
     /* page 1 */
     // let products = await Product.find().skip(0).limit(25)
 
@@ -12,15 +16,136 @@ const fetchProduct = async (req, res, next) => {
     // console.log(req.query)
     // return;
 
-    let per_page = req.query.per_page || 25
-    let page = req.query.page || 1
+    let per_page = parseInt(req.query.per_page) || 25
+    let page = parseInt(req.query.page) || 1
     let search_term = req.query.search_term || ""
 
 
     let price_from = parseFloat(req.query.price_from) || 0
     let price_to = parseFloat(req.query.price_to) || 999999999999
 
+
     // let products = await Product.find({ name: RegExp(search_term, "i") }).skip((page - 1) * per_page).limit(per_page)
+
+    let sort_by = req.query.sort_by || {}
+
+
+    switch (sort_by) {
+        case "nameasc":
+            sort_by = { name: 1 }
+            break;
+        case "namedesc":
+            sort_by = { name: -1 }
+            break;
+        case "priceasc":
+            sort_by = { price: 1 }
+            break;
+        case "pricedesc":
+            sort_by = { price: -1 }
+            break;
+        default:
+            sort_by = {};
+            break;
+    }
+
+
+    let total_products = await Product.aggregate([
+        {
+            $match: {
+                $or: [
+                    { name: RegExp(search_term, "i") },
+                    { brands: RegExp(search_term, "i") },
+                    { categories: RegExp(search_term, "i") }
+                ],
+            }
+        },
+        {
+            $match: {
+                $and: [
+                    { price: { $gte: price_from } },
+                    { price: { $lte: price_to } },
+                ]
+            }
+        },
+        {
+            $sort: sort_by
+        },
+        {
+            $lookup: {
+                from: "users",
+                foreignField: "_id",
+                localField: "created_by",
+                as: "created_by"
+            }
+        },
+        {
+            $unwind: "$created_by"
+        },
+        {
+            // db.users.find({},{name:1,_id:0})
+            $project: {
+                "created_by.password": 0
+            }
+        }
+
+    ])
+
+
+    let products = await Product.aggregate([
+        {
+            $match: {
+                $or: [
+                    { name: RegExp(search_term, "i") },
+                    { brands: RegExp(search_term, "i") },
+                    { categories: RegExp(search_term, "i") }
+                ],
+            }
+        },
+        {
+            $match: {
+                $and: [
+                    { price: { $gte: price_from } },
+                    { price: { $lte: price_to } },
+                ]
+            }
+        },
+        {
+            $sort: sort_by
+        },
+        {
+            $lookup: {
+                from: "users",
+                foreignField: "_id",
+                localField: "created_by",
+                as: "created_by"
+            }
+        },
+        {
+            $unwind: "$created_by"
+        },
+        {
+            // db.users.find({},{name:1,_id:0})
+            $project: {
+                "created_by.password": 0
+            }
+        },
+        {
+            $facet: {
+                meta_data: [{ $count: "total" }, { $addFields: { per_page, page } }],
+                products: [{ $skip: ((page - 1) * per_page) }, { $limit: per_page }]
+            }
+        },
+        // {
+        //     $skip: ((page - 1) * per_page)
+        // },
+        // {
+        //     $limit: per_page
+        // },
+
+    ])
+
+
+
 
     /* query operator $or */
 
@@ -48,26 +173,26 @@ const fetchProduct = async (req, res, next) => {
      collection of different filters  
      */
 
-    let products = await Product.aggregate([
-        // .find({name:"mouse"})
-        {
-            $match: {
-                $or: [
-                    { name: RegExp(search_term, "i") },
-                    { brands: RegExp(search_term, "i") },
-                    { categories: RegExp(search_term, "i") }
-                ]
-            }
-        }, // searched by name
-        {
-            $match: {
-                $and: [
-                    { price: { $gte: price_from } },
-                    { price: { $lte: price_to } },
-                ]
-            }
-        },
-    ])
+    // let products = await Product.aggregate([
+    //     // .find({name:"mouse"})
+    //     {
+    //         $match: {
+    //             $or: [
+    //                 { name: RegExp(search_term, "i") },
+    //                 { brands: RegExp(search_term, "i") },
+    //                 { categories: RegExp(search_term, "i") }
+    //             ]
+    //         }
+    //     }, // searched by name
+    //     {
+    //         $match: {
+    //             $and: [
+    //                 { price: { $gte: price_from } },
+    //                 { price: { $lte: price_to } },
+    //             ]
+    //         }
+    //     },
+    // ])
 
     /* totoal:38,page:1,per_page=25,products :[25datas..] */
 
@@ -76,7 +201,24 @@ const fetchProduct = async (req, res, next) => {
 
 
 
-    res.send({ data: products })
+    // console.log(products.length)
+
+    // res.send({
+    //     meta_data: {
+    //         total: total_products.length,
+    //         page: page,
+    //         per_page
+    //     },
+    //     products
+    // })
+
+    res.send({
+        data: products
+    })
+
+
+
+    // res.send({ data: products })
 }
 
 const store = async (req, res, next) => {

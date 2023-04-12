@@ -28,6 +28,11 @@ const login = async (req, res) => {
     let user = await User.findOne({ email: req.body.email })
     console.log(user);
 
+
+    /* if select:false in password field of userModel */
+    // let product = await User.findById("642ff06c1fcdaf445a65df48").select("password");
+    // return res.send(product);
+
     if (user) {
         let status = await bcrypt.compare(req.body.password, user.password);
         if (status) {

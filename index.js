@@ -48,8 +48,6 @@ app.use("/api", auth_route)
 app.use("/api/products", product_route)
 app.use("/api/orders", order_route)
 
-
-
 app.use((req, res) => {
     res.status(404).send({
         msg: "Resrource not found"
@@ -61,7 +59,10 @@ app.use((err, req, res, next) => {
     let msg = "SERVER error"
     let errors = null
 
-    if (err.name == "ValidationError") {
+    if (err.name == "CastError") {
+        msg = "Resrouce  not found"
+        status = 404
+    } else if (err.name == "ValidationError") {
         status = 400;
         msg = "Bad Request"
 

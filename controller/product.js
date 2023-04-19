@@ -295,8 +295,6 @@ const update = async (req, res, next) => {
         }
 
 
-
-
         /* check if the porudct belongs to the same seller  */
         let product = await Product.findByIdAndUpdate(req.params.id, { ...req.body, images }, {
             runValidators: true,
@@ -311,20 +309,25 @@ const update = async (req, res, next) => {
 
 const remove = async (req, res, next) => {
 
-    let product = await Product.findById(req.params.id)
+    try {
 
-    if (product) {
+        let product = await Product.findById(req.params.id)
 
-        // console.log()
-        // [ '1.png', '2.png' ]
-        product.images.forEach(img => {
-            fs.unlinkSync(path.resolve("uploads", img))
-        })
-        await Product.findByIdAndDelete(req.params.id)
-        return res.status(204).end()
+        if (product) {
+
+            // console.log()
+            // [ '1.png', '2.png' ]
+            product.images.forEach(img => {
+                fs.unlinkSync(path.resolve("uploads", img))
+            })
+            await Product.findByIdAndDelete(req.params.id)
+            return res.status(204).end()
+        }
+
+        res.status(404).send("Resource not found")
+    } catch (err) {
+        next(err)
     }
-
-    res.status(404).send("Resource not found")
 
 
 
